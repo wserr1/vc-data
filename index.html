@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VC Data — Venture Capital Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --border2: #2a2a2a;
+    --text: #f0ede8;
+    --muted: #666660;
+    --accent: #c8f542;
+    --accent2: #e8ff80;
+    --red: #ff4d4d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,245,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,245,66,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #0a0a0a;
+    padding: 8px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+  }
+
+  .nav-cta:hover { background: var(--accent2); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    padding: 160px 48px 80px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(52px, 8vw, 112px);
+    line-height: 0.92;
+    letter-spacing: -3px;
+    margin-bottom: 40px;
+    max-width: 900px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0a;
+    padding: 14px 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent2);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border2);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+
+  .btn-secondary:hover { color: var(--text); }
+
+  /* STATS BAR */
+  .stats-bar {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .stat {
+    padding: 32px 48px;
+    border-right: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .stat:last-child { border-right: none; }
+  .stat:nth-child(1) { animation-delay: 0.1s; }
+  .stat:nth-child(2) { animation-delay: 0.2s; }
+  .stat:nth-child(3) { animation-delay: 0.3s; }
+  .stat:nth-child(4) { animation-delay: 0.4s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+
+  .stat-value span { color: var(--accent); }
+
+  /* SECTION */
+  .section {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 48px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .section-title strong {
+    display: block;
+    font-size: 32px;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-top: 4px;
+    text-transform: none;
+  }
+
+  .section-meta {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* TABLE */
+  .table-wrap {
+    border: 1px solid var(--border);
+  }
+
+  .table-head {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    padding: 12px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .firm-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 0.15s;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+    cursor: pointer;
+  }
+
+  .firm-row:last-child { border-bottom: none; }
+  .firm-row:hover { background: var(--surface2); }
+
+  .firm-row:nth-child(1) { animation-delay: 0.05s; }
+  .firm-row:nth-child(2) { animation-delay: 0.10s; }
+  .firm-row:nth-child(3) { animation-delay: 0.15s; }
+  .firm-row:nth-child(4) { animation-delay: 0.20s; }
+  .firm-row:nth-child(5) { animation-delay: 0.25s; }
+  .firm-row:nth-child(6) { animation-delay: 0.30s; }
+  .firm-row:nth-child(7) { animation-delay: 0.35s; }
+  .firm-row:nth-child(8) { animation-delay: 0.40s; }
+  .firm-row:nth-child(9) { animation-delay: 0.45s; }
+  .firm-row:nth-child(10) { animation-delay: 0.50s; }
+
+  .firm-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .firm-location {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .firm-aum {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .firm-rank {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .firm-filed {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .firm-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    background: rgba(200,245,66,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(200,245,66,0.2);
+  }
+
+  /* AUM BAR */
+  .aum-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .aum-bar {
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+    min-width: 4px;
+  }
+
+  /* MATCH SECTION */
+  .match-section {
+    position: relative;
+    z-index: 1;
+    margin: 0 48px 80px;
+    border: 1px solid var(--border);
+    padding: 64px;
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  .match-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .match-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    margin-bottom: 20px;
+  }
+
+  .match-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .match-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-input {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .form-input::placeholder { color: var(--muted); }
+  .form-input:focus { border-color: var(--accent); }
+
+  .form-select {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  .match-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .match-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.2s;
+  }
+
+  .match-card:hover { border-color: var(--border2); }
+
+  .match-card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .match-pct {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .match-bar-outer {
+    height: 2px;
+    background: var(--border);
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .match-bar-inner {
+    height: 2px;
+    background: var(--accent);
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .footer-logo span { color: var(--accent); }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+  }
+
+  .footer-links a {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--text); }
+
+  /* SOURCE TAG */
+  .source-tag {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  .source-tag span {
+    color: var(--accent);
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">VC<span>.</span>Data</a>
+  <a href="#match" class="nav-cta">Find Your VC →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">SEC Data — Sourced from ADV Filings</div>
+  <h1>Venture Capital<br><em>Intelligence</em></h1>
+  <p class="hero-sub">The most comprehensive database of VC firms — AUM, partners, deal history, and a matching engine to connect startups with the right investors.</p>
+  <div class="hero-actions">
+    <a href="#database" class="btn-primary">Explore Database →</a>
+    <a href="#match" class="btn-secondary">Match My Startup</a>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-label">Firms Tracked</div>
+    <div class="stat-value">10<span>+</span></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Total AUM Tracked</div>
+    <div class="stat-value">$<span>380B</span></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Data Source</div>
+    <div class="stat-value" style="font-size:18px">SEC<span> EDGAR</span></div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Last Updated</div>
+    <div class="stat-value" style="font-size:18px">Mar<span> 2026</span></div>
+  </div>
+</div>
+
+<!-- DATABASE TABLE -->
+<section class="section" id="database">
+  <div class="section-header">
+    <div class="section-title">
+      SEC-Verified Data
+      <strong>Top VC Firms by AUM</strong>
+    </div>
+    <div class="section-meta">
+      Source: SEC Form ADV<br>
+      Data as of Oct–Nov 2024
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-head">
+      <div>Firm</div>
+      <div>Location</div>
+      <div>AUM</div>
+      <div>Status</div>
+      <div>Last Filed</div>
+    </div>
+
+    <!-- Rows -->
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Insight Venture Management</div>
+        <div class="firm-location">New York, NY</div>
+      </div>
+      <div class="firm-rank">New York, NY</div>
+      <div>
+        <div class="firm-aum">$89.3B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:100%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Oct 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Sequoia Capital Operations</div>
+        <div class="firm-location">Menlo Park, CA</div>
+      </div>
+      <div class="firm-rank">Menlo Park, CA</div>
+      <div>
+        <div class="firm-aum">$56.3B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:63%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Oct 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">AH Capital (a16z)</div>
+        <div class="firm-location">Menlo Park, CA</div>
+      </div>
+      <div class="firm-rank">Menlo Park, CA</div>
+      <div>
+        <div class="firm-aum">$56.0B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:62%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Mar 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Tiger Global Management</div>
+        <div class="firm-location">New York, NY</div>
+      </div>
+      <div class="firm-rank">New York, NY</div>
+      <div>
+        <div class="firm-aum">$55.9B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:62%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">May 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Pantheon Ventures</div>
+        <div class="firm-location">San Francisco, CA</div>
+      </div>
+      <div class="firm-rank">San Francisco, CA</div>
+      <div>
+        <div class="firm-aum">$40.5B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:45%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Jul 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">General Catalyst Group</div>
+        <div class="firm-location">Cambridge, MA</div>
+      </div>
+      <div class="firm-rank">Cambridge, MA</div>
+      <div>
+        <div class="firm-aum">$27.3B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:30%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">May 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Sapphire Ventures</div>
+        <div class="firm-location">Austin, TX</div>
+      </div>
+      <div class="firm-rank">Austin, TX</div>
+      <div>
+        <div class="firm-aum">$10.8B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:12%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Mar 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Bain Capital Ventures</div>
+        <div class="firm-location">Boston, MA</div>
+      </div>
+      <div class="firm-rank">Boston, MA</div>
+      <div>
+        <div class="firm-aum">$9.9B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:11%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Jul 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Altos Ventures Management</div>
+        <div class="firm-location">Burlingame, CA</div>
+      </div>
+      <div class="firm-rank">Burlingame, CA</div>
+      <div>
+        <div class="firm-aum">$7.7B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:8%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Oct 2024</div>
+    </div>
+
+    <div class="firm-row">
+      <div>
+        <div class="firm-name">Industry Ventures</div>
+        <div class="firm-location">San Francisco, CA</div>
+      </div>
+      <div class="firm-rank">San Francisco, CA</div>
+      <div>
+        <div class="firm-aum">$7.5B</div>
+        <div class="aum-bar-wrap"><div class="aum-bar" style="width:8%"></div></div>
+      </div>
+      <div><span class="firm-badge">Active</span></div>
+      <div class="firm-filed">Mar 2024</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+    <div class="source-tag">Source: <span>SEC Form ADV — IA_ADV_Base_A dataset</span></div>
+    <a href="#" class="btn-secondary" style="font-size:11px">View All Firms →</a>
+  </div>
+</section>
+
+<!-- MATCH SECTION -->
+<div class="match-section" id="match">
+  <div>
+    <div class="match-label">★ New Feature</div>
+    <h2 class="match-title">Find Your Perfect VC Match</h2>
+    <p class="match-desc">Tell us about your startup and we'll identify the VC firms most aligned with your stage, industry, and funding needs.</p>
+    <div class="match-form">
+      <div class="form-row">
+        <input class="form-input" type="text" placeholder="Company name">
+        <select class="form-select">
+          <option value="" disabled selected>Industry</option>
+          <option>AI / Machine Learning</option>
+          <option>SaaS / Software</option>
+          <option>Fintech</option>
+          <option>Healthcare</option>
+          <option>Consumer</option>
+          <option>Deep Tech</option>
+          <option>Food & Beverage</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <select class="form-select">
+          <option value="" disabled selected>Stage</option>
+          <option>Pre-seed</option>
+          <option>Seed</option>
+          <option>Series A</option>
+          <option>Series B+</option>
+        </select>
+        <input class="form-input" type="text" placeholder="Raise amount (e.g. $2M)">
+      </div>
+      <a href="#" class="btn-primary" style="text-align:center">Find My Match →</a>
+    </div>
+  </div>
+
+  <div class="match-visual">
+    <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Sample Results</div>
+    <div class="match-card">
+      <div>
+        <div class="match-card-name">Sequoia Capital</div>
+        <div class="match-bar-outer"><div class="match-bar-inner" style="width:94%"></div></div>
+      </div>
+      <div class="match-pct">94%</div>
+    </div>
+    <div class="match-card">
+      <div>
+        <div class="match-card-name">General Catalyst</div>
+        <div class="match-bar-outer"><div class="match-bar-inner" style="width:87%"></div></div>
+      </div>
+      <div class="match-pct">87%</div>
+    </div>
+    <div class="match-card">
+      <div>
+        <div class="match-card-name">Bain Capital Ventures</div>
+        <div class="match-bar-outer"><div class="match-bar-inner" style="width:71%"></div></div>
+      </div>
+      <div class="match-pct">71%</div>
+    </div>
+    <div class="match-card">
+      <div>
+        <div class="match-card-name">Sapphire Ventures</div>
+        <div class="match-bar-outer"><div class="match-bar-inner" style="width:64%"></div></div>
+      </div>
+      <div class="match-pct">64%</div>
+    </div>
+    <div style="font-size:11px; color:var(--muted); margin-top:8px;">
+      Match % based on industry focus, check size, and stage alignment
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">VC<span>.</span>Data</div>
+  <div class="footer-note">Data sourced from SEC EDGAR</div>
+  <div class="footer-links">
+    <a href="#">Database</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>
