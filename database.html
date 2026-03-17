@@ -402,6 +402,8 @@
   async function fetchFirms(search, state, sort, offset) {
     let url = "/.netlify/functions/airtable?limit=25";
     if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (state) url += `&state=${encodeURIComponent(state)}`;
+    if (sort) url += `&sort=${sort}`;
     if (offset) url += `&offset=${offset}`;
     const res = await fetch(url);
     const data = await res.json();
@@ -510,7 +512,9 @@
 
   async function loadFirms() {
     const search = document.getElementById("searchInput").value;
-    const data = await fetchFirms(search, null, null, null);
+    const state = document.getElementById("stateFilter").value;
+    const sort = document.getElementById("sortSelect").value;
+    const data = await fetchFirms(search, state, sort, null);
     allFirms = data.records;
     filtered = data.records;
     currentOffset = data.offset;
