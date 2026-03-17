@@ -1,5 +1,4 @@
 *.csv
 *.xlsx
 scraper.py
-database.html
 .env
