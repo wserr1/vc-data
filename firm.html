@@ -363,17 +363,9 @@
       return;
     }
 
-    let firms = [];
-    let offset = null;
-    do {
-      let url = "/.netlify/functions/airtable?limit=100";
-      if (offset) url += `&offset=${offset}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      firms = firms.concat(data.records);
-      offset = data.offset;
-    } while (offset);
-    const firm = firms.find(f => f.Firm === decodeURIComponent(firmName));
+    const res = await fetch(`/.netlify/functions/airtable?search=${encodeURIComponent(firmName)}&limit=1`);
+    const data = await res.json();
+    const firm = data.records[0];
 
     if (!firm) {
       document.getElementById("content").innerHTML = '<p style="color:var(--muted);padding:80px 0">Firm not found.</p>';

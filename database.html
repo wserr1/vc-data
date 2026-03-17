@@ -399,18 +399,13 @@
   let currentPage = 1;
   const PER_PAGE = 25;
 
-  async function fetchAllFirms() {
-    let allFirms = [];
-    let offset = null;
-    do {
-      let url = "/.netlify/functions/airtable?limit=100";
-      if (offset) url += `&offset=${offset}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      allFirms = allFirms.concat(data.records);
-      offset = data.offset;
-    } while (offset);
-    return allFirms;
+  async function fetchFirms(search, state, sort, offset) {
+    let url = "/.netlify/functions/airtable?limit=25";
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (offset) url += `&offset=${offset}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data;
   }
 
   function formatAUM(aum) {
@@ -511,17 +506,26 @@
     });
   }
 
-  document.getElementById("searchInput").addEventListener("keyup", applyFilters);
-  document.getElementById("stateFilter").addEventListener("change", applyFilters);
-  document.getElementById("sortSelect").addEventListener("change", applyFilters);
+  let currentOffset = null;
 
-  (async () => {
-    allFirms = await fetchAllFirms();
-    filtered = [...allFirms].sort((a, b) => (b.AUM || 0) - (a.AUM || 0));
-    populateStateFilter();
+  async function loadFirms() {
+    const search = document.getElementById("searchInput").value;
+    const data = await fetchFirms(search, null, null, null);
+    allFirms = data.records;
+    filtered = data.records;
+    currentOffset = data.offset;
     renderTable();
     renderPagination();
-  })();
+  }
+
+  document.getElementById("searchInput").addEventListener("keyup", () => {
+    setTimeout(loadFirms, 300);
+  });
+
+  document.getElementById("stateFilter").addEventListener("change", loadFirms);
+  document.getElementById("sortSelect").addEventListener("change", loadFirms);
+
+  loadFirms();
 </script>
 </body>
 </html>
