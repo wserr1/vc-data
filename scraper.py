@@ -4,7 +4,10 @@ import requests
 warnings.filterwarnings("ignore")
 
 # ---- YOUR DETAILS (fill these in) ---- #
-AIRTABLE_API_KEY = "patkes9OMbDl4K4UR.0a2c06e0e17fa519769073863bd7e1cd2ee6755098c4507eca509d16cdcb638a"
+import os
+from dotenv import load_dotenv
+load_dotenv()
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_TOKEN")
 BASE_ID = "appyfDILW0PkDwiHH"
 TABLE_NAME = "VC Firms"
 # --------------------------------------- #
