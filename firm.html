@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VC Data — Firm Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --border2: #2a2a2a;
+    --text: #f0ede8;
+    --muted: #666660;
+    --accent: #c8f542;
+    --accent2: #e8ff80;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,245,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,245,66,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 120px 48px 80px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 40px;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--accent); }
+
+  .firm-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 40px;
+    margin-bottom: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: flex-end;
+    gap: 40px;
+  }
+
+  .firm-tag {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .firm-name {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .firm-meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .firm-meta span { display: flex; align-items: center; gap: 6px; }
+
+  .aum-display {
+    text-align: right;
+  }
+
+  .aum-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .aum-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    color: var(--accent);
+  }
+
+  .aum-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+  }
+
+  .card-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .data-row:last-child { border-bottom: none; }
+
+  .data-label { color: var(--muted); }
+
+  .data-value {
+    color: var(--text);
+    text-align: right;
+    max-width: 60%;
+  }
+
+  .data-value.accent { color: var(--accent); }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+  }
+
+  .badge-verified {
+    background: rgba(200,245,66,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(200,245,66,0.2);
+  }
+
+  .badge-exempt {
+    background: rgba(102,102,96,0.15);
+    color: var(--muted);
+    border: 1px solid rgba(102,102,96,0.3);
+  }
+
+  .full-width { grid-column: 1 / -1; }
+
+  .source-tag {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 24px;
+  }
+
+  .source-tag span { color: var(--accent); opacity: 0.7; }
+
+  .loading {
+    text-align: center;
+    padding: 120px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .loading::after {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 16px auto 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">VC<span>.</span>Data</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="database.html">Database</a></li>
+    <li><a href="#">Match</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+</nav>
+
+<div class="main" id="content">
+  <div class="loading">Loading firm data</div>
+</div>
+
+<script>
+  function formatAUM(aum) {
+    if (!aum) return "Not disclosed";
+    if (aum >= 1e9) return `$${(aum / 1e9).toFixed(1)}B`;
+    if (aum >= 1e6) return `$${(aum / 1e6).toFixed(0)}M`;
+    return `$${aum.toLocaleString()}`;
+  }
+
+  function formatPhone(phone) {
+    if (!phone) return "—";
+    const clean = phone.replace(/\D/g, '');
+    if (clean.length === 10) return `(${clean.slice(0,3)}) ${clean.slice(3,6)}-${clean.slice(6)}`;
+    return phone;
+  }
+
+  async function loadFirm() {
+    const params = new URLSearchParams(window.location.search);
+    const firmName = params.get("firm");
+
+    if (!firmName) {
+      document.getElementById("content").innerHTML = '<p style="color:var(--muted);padding:80px 0">No firm specified.</p>';
+      return;
+    }
+
+    const res = await fetch(`/.netlify/functions/airtable`);
+    const firms = await res.json();
+    const firm = firms.find(f => f.Firm === decodeURIComponent(firmName));
+
+    if (!firm) {
+      document.getElementById("content").innerHTML = '<p style="color:var(--muted);padding:80px 0">Firm not found.</p>';
+      return;
+    }
+
+    const isExempt = firm.Notes === "Exempt Reporting Adviser";
+
+    document.title = `VC Data — ${firm.Firm}`;
+
+    document.getElementById("content").innerHTML = `
+      <a href="database.html" class="back-link">← Back to Database</a>
+
+      <div class="firm-header">
+        <div>
+          <div class="firm-tag">SEC Registered · ${isExempt ? "Exempt Reporting Adviser" : "Full Registrant"}</div>
+          <h1 class="firm-name">${firm.Firm}</h1>
+          <div class="firm-meta">
+            <span>📍 ${firm.City || "—"}, ${firm.State || "—"}</span>
+            ${firm.Phone ? `<span>📞 ${formatPhone(firm.Phone)}</span>` : ""}
+            ${firm["Last Filed"] ? `<span>🗓 Filed ${firm["Last Filed"]}</span>` : ""}
+          </div>
+        </div>
+        <div class="aum-display">
+          <div class="aum-label">Assets Under Management</div>
+          <div class="aum-value">${formatAUM(firm.AUM)}</div>
+          ${firm.AUM ? `<div class="aum-sub">SEC Verified</div>` : `<div class="aum-sub">Not Required to Disclose</div>`}
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-title">Firm Details</div>
+          <div class="data-row">
+            <span class="data-label">Legal Name</span>
+            <span class="data-value">${firm.Firm}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">CRD Number</span>
+            <span class="data-value accent">${firm.CRD || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">City</span>
+            <span class="data-value">${firm.City || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">State</span>
+            <span class="data-value">${firm.State || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Address</span>
+            <span class="data-value">${firm.Address || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Phone</span>
+            <span class="data-value">${formatPhone(firm.Phone)}</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Fund Statistics</div>
+          <div class="data-row">
+            <span class="data-label">Total AUM</span>
+            <span class="data-value accent">${formatAUM(firm.AUM)}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Employees</span>
+            <span class="data-value">${firm.Employees || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Number of Clients</span>
+            <span class="data-value">${firm.Clients || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Last Filed</span>
+            <span class="data-value">${firm["Last Filed"] || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Registration Type</span>
+            <span class="data-value">
+              ${isExempt
+                ? '<span class="badge badge-exempt">Exempt Reporting Adviser</span>'
+                : '<span class="badge badge-verified">SEC Full Registrant</span>'}
+            </span>
+          </div>
+        </div>
+
+        <div class="card full-width">
+          <div class="card-title">Data Source</div>
+          <div class="data-row">
+            <span class="data-label">Source</span>
+            <span class="data-value">SEC Form ADV — IA_ADV_Base_A dataset</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">Filing Date</span>
+            <span class="data-value">${firm["Last Filed"] || "—"}</span>
+          </div>
+          <div class="data-row">
+            <span class="data-label">CRD Number</span>
+            <span class="data-value">${firm.CRD || "—"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="source-tag">Data sourced from <span>SEC EDGAR Form ADV</span>. All figures are as reported in the most recent filing.</div>
+    `;
+  }
+
+  loadFirm();
+</script>
+</body>
+</html>

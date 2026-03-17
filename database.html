@@ -431,7 +431,7 @@
         ? '<span class="badge badge-exempt">Exempt</span>'
         : '<span class="badge badge-verified">SEC Verified</span>';
       return `
-        <div class="firm-row">
+        <div class="firm-row" onclick="window.location='firm.html?firm=${encodeURIComponent(firm.Firm)}'">
           <div class="firm-name" title="${firm.Firm}">${firm.Firm || "—"}</div>
           <div class="firm-location">${firm.City || "—"}</div>
           <div class="firm-location">${firm.State || "—"}</div>

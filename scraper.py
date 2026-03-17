@@ -58,33 +58,64 @@ while True:
 print(f"Found {len(existing_firms)} existing firms")
 print(f"Pushing {len(vc_firms)} firms to Airtable...")
 
-success = 0
-skipped = 0
-for _, row in vc_firms.iterrows():
-    if row["1A"] in existing_firms:
-        skipped += 1
-        continue
-    data = {
-        "fields": {
-            "Firm": row["1A"],
-            "City": row["1F1-City"] if pd.notna(row["1F1-City"]) else "",
-            "State": row["1F1-State"] if pd.notna(row["1F1-State"]) else "",
-            "AUM": float(row["5F2a"]),
-            "Last Filed": row["DateSubmitted"].strftime("%B %Y")
-        }
-    }
-    response = requests.post(
-        f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}",
-        headers=headers,
-        json=data
-    )
-    if response.status_code == 200:
-        success += 1
-        print(f"Added: {row['1A']}")
-    else:
-        print(f"Error: {row['1A']} — {response.text[:50]}")
+# Get record IDs so we can update existing records
+print("Getting record IDs...")
+record_map = {}
+offset = None
+while True:
+    url = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}"
+    if offset:
+        url += f"?offset={offset}"
+    resp = requests.get(url, headers=headers)
+    data = resp.json()
+    for record in data.get("records", []):
+        name = record["fields"].get("Firm", "")
+        record_map[name] = record["id"]
+    offset = data.get("offset")
+    if not offset:
+        break
 
-print(f"\nDone! Added {success} new firms, skipped {skipped} duplicates.")
+print(f"Found {len(record_map)} existing records")
+
+success = 0
+added = 0
+for _, row in vc_firms.iterrows():
+    fields = {
+        "Firm": row["1A"],
+        "City": row["1F1-City"] if pd.notna(row["1F1-City"]) else "",
+        "State": row["1F1-State"] if pd.notna(row["1F1-State"]) else "",
+        "AUM": float(row["5F2a"]),
+        "Last Filed": row["DateSubmitted"].strftime("%B %Y"),
+        "Phone": str(row["1F3"]) if pd.notna(row["1F3"]) else "",
+        "Address": f"{row['1F1-Street 1']} {row['1F1-Street 2']}".strip() if pd.notna(row["1F1-Street 1"]) else "",
+        "Employees": int(float(row["5A"])) if pd.notna(row["5A"]) and str(row["5A"]).replace('.','').isdigit() else 0,
+        "Clients": int(float(row["5B1"])) if pd.notna(row["5B1"]) and str(row["5B1"]).replace('.','').isdigit() else 0,
+        "CRD": str(row["1E1"]) if pd.notna(row["1E1"]) else ""
+    }
+
+    if row["1A"] in record_map:
+        response = requests.patch(
+            f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}/{record_map[row['1A']]}",
+            headers=headers,
+            json={"fields": fields}
+        )
+        if response.status_code == 200:
+            success += 1
+        else:
+            print(f"Error updating {row['1A']}: {response.text[:50]}")
+    else:
+        response = requests.post(
+            f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}",
+            headers=headers,
+            json={"fields": fields}
+        )
+        if response.status_code == 200:
+            added += 1
+            print(f"Added: {row['1A']}")
+        else:
+            print(f"Error adding {row['1A']}: {response.text[:50]}")
+
+print(f"\nDone! Updated {success} firms, added {added} new firms.")
 
 # Add famous exempt reporting firms
 exempt_firms = [
@@ -121,3 +152,4 @@ for firm in exempt_firms:
         print(f"Added: {firm['Firm']}")
     else:
         print(f"Error: {firm['Firm']} — {response.text[:50]}")
+    
