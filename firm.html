@@ -41,9 +41,7 @@
 
   nav {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     z-index: 100;
     display: flex;
     align-items: center;
@@ -65,11 +63,7 @@
 
   .logo span { color: var(--accent); }
 
-  .nav-links {
-    display: flex;
-    gap: 32px;
-    list-style: none;
-  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
 
   .nav-links a {
     color: var(--muted);
@@ -125,7 +119,7 @@
 
   .firm-name {
     font-family: 'Syne', sans-serif;
-    font-size: clamp(28px, 4vw, 52px);
+    font-size: clamp(24px, 4vw, 48px);
     font-weight: 800;
     letter-spacing: -2px;
     line-height: 1;
@@ -140,11 +134,7 @@
     flex-wrap: wrap;
   }
 
-  .firm-meta span { display: flex; align-items: center; gap: 6px; }
-
-  .aum-display {
-    text-align: right;
-  }
+  .aum-display { text-align: right; }
 
   .aum-label {
     font-size: 10px;
@@ -156,7 +146,7 @@
 
   .aum-value {
     font-family: 'Syne', sans-serif;
-    font-size: 40px;
+    font-size: 36px;
     font-weight: 800;
     letter-spacing: -2px;
     color: var(--accent);
@@ -168,17 +158,34 @@
     margin-top: 4px;
   }
 
-  .grid {
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 40px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 24px;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
   }
 
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 28px;
+    padding: 24px;
   }
 
   .card-title {
@@ -186,31 +193,63 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-bottom: 20px;
-    padding-bottom: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
   }
 
   .data-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
+    align-items: flex-start;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
     font-size: 12px;
+    gap: 16px;
   }
 
   .data-row:last-child { border-bottom: none; }
 
-  .data-label { color: var(--muted); }
+  .data-label { color: var(--muted); white-space: nowrap; flex-shrink: 0; }
 
   .data-value {
     color: var(--text);
     text-align: right;
-    max-width: 60%;
+    word-break: break-word;
   }
 
   .data-value.accent { color: var(--accent); }
+
+  .data-value.large {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
 
   .badge {
     display: inline-block;
@@ -232,12 +271,24 @@
     border: 1px solid rgba(102,102,96,0.3);
   }
 
-  .full-width { grid-column: 1 / -1; }
+  .badge-yes {
+    background: rgba(200,245,66,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(200,245,66,0.2);
+  }
+
+  .badge-no {
+    background: rgba(102,102,96,0.1);
+    color: var(--muted);
+    border: 1px solid rgba(102,102,96,0.2);
+  }
 
   .source-tag {
     font-size: 10px;
     color: var(--muted);
-    margin-top: 24px;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
   }
 
   .source-tag span { color: var(--accent); opacity: 0.7; }
@@ -281,24 +332,32 @@
 </div>
 
 <script>
-  function formatAUM(aum) {
-    if (!aum) return "Not disclosed";
-    if (aum >= 1e9) return `$${(aum / 1e9).toFixed(1)}B`;
-    if (aum >= 1e6) return `$${(aum / 1e6).toFixed(0)}M`;
-    return `$${aum.toLocaleString()}`;
+  function fmt(n) {
+    if (!n) return "—";
+    if (n >= 1e9) return `$${(n/1e9).toFixed(1)}B`;
+    if (n >= 1e6) return `$${(n/1e6).toFixed(0)}M`;
+    return `$${n.toLocaleString()}`;
   }
 
-  function formatPhone(phone) {
-    if (!phone) return "—";
-    const clean = phone.replace(/\D/g, '');
-    if (clean.length === 10) return `(${clean.slice(0,3)}) ${clean.slice(3,6)}-${clean.slice(6)}`;
-    return phone;
+  function fmtPhone(p) {
+    if (!p) return "—";
+    const c = p.replace(/\D/g,'');
+    if (c.length === 10) return `(${c.slice(0,3)}) ${c.slice(3,6)}-${c.slice(6)}`;
+    return p;
+  }
+
+  function v(val, fallback="—") {
+    return (val !== undefined && val !== null && val !== "" && val !== 0) ? val : fallback;
+  }
+
+  function pct(val) {
+    if (!val) return "—";
+    return `${val}%`;
   }
 
   async function loadFirm() {
     const params = new URLSearchParams(window.location.search);
     const firmName = params.get("firm");
-
     if (!firmName) {
       document.getElementById("content").innerHTML = '<p style="color:var(--muted);padding:80px 0">No firm specified.</p>';
       return;
@@ -314,7 +373,6 @@
     }
 
     const isExempt = firm.Notes === "Exempt Reporting Adviser";
-
     document.title = `VC Data — ${firm.Firm}`;
 
     document.getElementById("content").innerHTML = `
@@ -322,96 +380,113 @@
 
       <div class="firm-header">
         <div>
-          <div class="firm-tag">SEC Registered · ${isExempt ? "Exempt Reporting Adviser" : "Full Registrant"}</div>
+          <div class="firm-tag">${isExempt ? "Exempt Reporting Adviser" : "SEC Full Registrant · Form ADV"}</div>
           <h1 class="firm-name">${firm.Firm}</h1>
           <div class="firm-meta">
-            <span>📍 ${firm.City || "—"}, ${firm.State || "—"}</span>
-            ${firm.Phone ? `<span>📞 ${formatPhone(firm.Phone)}</span>` : ""}
+            <span>📍 ${v(firm.City)}, ${v(firm.State)}</span>
+            ${firm.Phone ? `<span>📞 ${fmtPhone(firm.Phone)}</span>` : ""}
             ${firm["Last Filed"] ? `<span>🗓 Filed ${firm["Last Filed"]}</span>` : ""}
+            ${firm["Business Hours"] ? `<span>🕐 ${firm["Business Hours"]}</span>` : ""}
           </div>
         </div>
         <div class="aum-display">
           <div class="aum-label">Assets Under Management</div>
-          <div class="aum-value">${formatAUM(firm.AUM)}</div>
-          ${firm.AUM ? `<div class="aum-sub">SEC Verified</div>` : `<div class="aum-sub">Not Required to Disclose</div>`}
+          <div class="aum-value">${fmt(firm.AUM)}</div>
+          <div class="aum-sub">${firm.AUM ? "SEC Verified · Form ADV" : "Not required to disclose"}</div>
         </div>
       </div>
 
-      <div class="grid">
-        <div class="card">
-          <div class="card-title">Firm Details</div>
-          <div class="data-row">
-            <span class="data-label">Legal Name</span>
-            <span class="data-value">${firm.Firm}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">CRD Number</span>
-            <span class="data-value accent">${firm.CRD || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">City</span>
-            <span class="data-value">${firm.City || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">State</span>
-            <span class="data-value">${firm.State || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Address</span>
-            <span class="data-value">${firm.Address || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Phone</span>
-            <span class="data-value">${formatPhone(firm.Phone)}</span>
-          </div>
+      <div class="grid-3">
+        <div class="stat-card">
+          <div class="stat-value">${v(firm.Employees)}</div>
+          <div class="stat-label">Total Employees</div>
         </div>
-
-        <div class="card">
-          <div class="card-title">Fund Statistics</div>
-          <div class="data-row">
-            <span class="data-label">Total AUM</span>
-            <span class="data-value accent">${formatAUM(firm.AUM)}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Employees</span>
-            <span class="data-value">${firm.Employees || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Number of Clients</span>
-            <span class="data-value">${firm.Clients || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Last Filed</span>
-            <span class="data-value">${firm["Last Filed"] || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Registration Type</span>
-            <span class="data-value">
-              ${isExempt
-                ? '<span class="badge badge-exempt">Exempt Reporting Adviser</span>'
-                : '<span class="badge badge-verified">SEC Full Registrant</span>'}
-            </span>
-          </div>
+        <div class="stat-card">
+          <div class="stat-value">${v(firm["Advisory Employees"])}</div>
+          <div class="stat-label">Investment Staff</div>
         </div>
-
-        <div class="card full-width">
-          <div class="card-title">Data Source</div>
-          <div class="data-row">
-            <span class="data-label">Source</span>
-            <span class="data-value">SEC Form ADV — IA_ADV_Base_A dataset</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">Filing Date</span>
-            <span class="data-value">${firm["Last Filed"] || "—"}</span>
-          </div>
-          <div class="data-row">
-            <span class="data-label">CRD Number</span>
-            <span class="data-value">${firm.CRD || "—"}</span>
-          </div>
+        <div class="stat-card">
+          <div class="stat-value">${v(firm.Clients)}</div>
+          <div class="stat-label">Active Clients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${fmt(firm["Discretionary AUM"])}</div>
+          <div class="stat-label">Discretionary AUM</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${fmt(firm["Non-US AUM"])}</div>
+          <div class="stat-label">Non-US AUM</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${v(firm["Num Custodians"])}</div>
+          <div class="stat-label">Custodians</div>
         </div>
       </div>
 
-      <div class="source-tag">Data sourced from <span>SEC EDGAR Form ADV</span>. All figures are as reported in the most recent filing.</div>
+      <div class="section-label">Firm Information</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Registration & Identity</div>
+          <div class="data-row"><span class="data-label">Legal Name</span><span class="data-value">${firm.Firm}</span></div>
+          <div class="data-row"><span class="data-label">CRD Number</span><span class="data-value accent">${v(firm.CRD)}</span></div>
+          <div class="data-row"><span class="data-label">Registration Type</span><span class="data-value">${isExempt ? '<span class="badge badge-exempt">Exempt Adviser</span>' : '<span class="badge badge-verified">Full Registrant</span>'}</span></div>
+          <div class="data-row"><span class="data-label">Private Fund Adviser</span><span class="data-value">${firm["Private Fund Advisor"] === "Yes" ? '<span class="badge badge-yes">Yes</span>' : '<span class="badge badge-no">No</span>'}</span></div>
+          <div class="data-row"><span class="data-label">Last Filed</span><span class="data-value">${v(firm["Last Filed"])}</span></div>
+          ${firm.Signatory ? `<div class="data-row"><span class="data-label">Signatory</span><span class="data-value">${firm.Signatory}</span></div>` : ""}
+          ${firm["Signatory Title"] ? `<div class="data-row"><span class="data-label">Title</span><span class="data-value">${firm["Signatory Title"]}</span></div>` : ""}
+        </div>
+
+        <div class="card">
+          <div class="card-title">Contact & Location</div>
+          <div class="data-row"><span class="data-label">Address</span><span class="data-value">${v(firm.Address)}</span></div>
+          <div class="data-row"><span class="data-label">City</span><span class="data-value">${v(firm.City)}</span></div>
+          <div class="data-row"><span class="data-label">State</span><span class="data-value">${v(firm.State)}</span></div>
+          <div class="data-row"><span class="data-label">Phone</span><span class="data-value">${fmtPhone(firm.Phone)}</span></div>
+          ${firm.Fax ? `<div class="data-row"><span class="data-label">Fax</span><span class="data-value">${firm.Fax}</span></div>` : ""}
+          ${firm["Business Hours"] ? `<div class="data-row"><span class="data-label">Business Hours</span><span class="data-value">${firm["Business Hours"]}</span></div>` : ""}
+        </div>
+      </div>
+
+      <div class="section-label">Assets Under Management</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">AUM Breakdown</div>
+          <div class="data-row"><span class="data-label">Total AUM</span><span class="data-value large">${fmt(firm.AUM)}</span></div>
+          <div class="data-row"><span class="data-label">Discretionary AUM</span><span class="data-value accent">${fmt(firm["Discretionary AUM"])}</span></div>
+          <div class="data-row"><span class="data-label">Non-Discretionary AUM</span><span class="data-value">${fmt(firm["Non Discretionary AUM"])}</span></div>
+          <div class="data-row"><span class="data-label">Non-US AUM</span><span class="data-value">${fmt(firm["Non-US AUM"])}</span></div>
+          <div class="data-row"><span class="data-label">Number of Accounts</span><span class="data-value">${v(firm["Num Accounts"])}</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Client Profile</div>
+          <div class="data-row"><span class="data-label">Total Clients</span><span class="data-value accent">${v(firm.Clients)}</span></div>
+          <div class="data-row"><span class="data-label">Non-US Clients</span><span class="data-value">${pct(firm["Pct Non-US Clients"])}</span></div>
+          <div class="data-row"><span class="data-label">Compensation Structure</span><span class="data-value">${v(firm.Compensation)}</span></div>
+          <div class="data-row"><span class="data-label">Number of Custodians</span><span class="data-value">${v(firm["Num Custodians"])}</span></div>
+        </div>
+      </div>
+
+      <div class="section-label">People & Operations</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Employees</div>
+          <div class="data-row"><span class="data-label">Total Employees</span><span class="data-value accent">${v(firm.Employees)}</span></div>
+          <div class="data-row"><span class="data-label">Investment Staff</span><span class="data-value">${v(firm["Advisory Employees"])}</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Key Contacts</div>
+          ${firm.Signatory ? `<div class="data-row"><span class="data-label">Signatory</span><span class="data-value">${firm.Signatory}</span></div>` : ""}
+          ${firm["Signatory Title"] ? `<div class="data-row"><span class="data-label">Title</span><span class="data-value">${firm["Signatory Title"]}</span></div>` : ""}
+          ${!firm.Signatory && !firm["Signatory Title"] ? `<div class="data-row"><span class="data-label">Contact data</span><span class="data-value">Not available</span></div>` : ""}
+        </div>
+      </div>
+
+      <div class="source-tag">
+        All data sourced from <span>SEC Form ADV — IA_ADV_Base_A dataset</span>.
+        Figures reflect the most recent filing as of ${v(firm["Last Filed"])}.
+        CRD: ${v(firm.CRD)}
+      </div>
     `;
   }
 
