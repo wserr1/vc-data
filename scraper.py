@@ -80,17 +80,56 @@ print(f"Found {len(record_map)} existing records")
 success = 0
 added = 0
 for _, row in vc_firms.iterrows():
+    def safe_str(val):
+        return str(val) if pd.notna(val) else ""
+
+    def safe_int(val):
+        try:
+            return int(float(val)) if pd.notna(val) else 0
+        except:
+            return 0
+
+    def safe_float(val):
+        try:
+            return float(val) if pd.notna(val) else 0.0
+        except:
+            return 0.0
+
+    comp_types = []
+    if row.get("5E1") == "Y": comp_types.append("% of AUM")
+    if row.get("5E2") == "Y": comp_types.append("Hourly")
+    if row.get("5E3") == "Y": comp_types.append("Subscription")
+    if row.get("5E4") == "Y": comp_types.append("Fixed fees")
+    if row.get("5E5") == "Y": comp_types.append("Commissions")
+    if row.get("5E6") == "Y": comp_types.append("Performance-based")
+    if row.get("5E7") == "Y":
+        other = safe_str(row.get("5E7-Other", ""))
+        comp_types.append(other if other else "Other")
+
     fields = {
         "Firm": row["1A"],
-        "City": row["1F1-City"] if pd.notna(row["1F1-City"]) else "",
-        "State": row["1F1-State"] if pd.notna(row["1F1-State"]) else "",
-        "AUM": float(row["5F2a"]),
+        "City": safe_str(row["1F1-City"]),
+        "State": safe_str(row["1F1-State"]),
+        "AUM": safe_float(row["5F2a"]),
         "Last Filed": row["DateSubmitted"].strftime("%B %Y"),
-        "Phone": str(row["1F3"]) if pd.notna(row["1F3"]) else "",
-        "Address": f"{row['1F1-Street 1']} {row['1F1-Street 2']}".strip() if pd.notna(row["1F1-Street 1"]) else "",
-        "Employees": int(float(row["5A"])) if pd.notna(row["5A"]) and str(row["5A"]).replace('.','').isdigit() else 0,
-        "Clients": int(float(row["5B1"])) if pd.notna(row["5B1"]) and str(row["5B1"]).replace('.','').isdigit() else 0,
-        "CRD": str(row["1E1"]) if pd.notna(row["1E1"]) else ""
+        "Phone": safe_str(row["1F3"]),
+        "Address": f"{safe_str(row['1F1-Street 1'])} {safe_str(row['1F1-Street 2'])}".strip(),
+        "Employees": safe_int(row["5A"]),
+        "Clients": safe_int(row["5B1"]),
+        "CRD": safe_str(row["1E1"]),
+        "Business Hours": f"{safe_str(row['1F2-M-F'])} {safe_str(row['1F2-Hours'])}".strip(),
+        "Fax": safe_str(row["1F4"]),
+        "Pct Non-US Clients": safe_float(row["5C2"]),
+        "Num Accounts": safe_int(row["5F2f"]),
+        "Advisory Employees": safe_int(row["5B1"]),
+        "Compensation": ", ".join(comp_types),
+        "Non-US AUM": safe_float(row["5F3"]),
+        "Private Fund Advisor": "Yes" if row.get("7B") == "Y" else "No",
+        "Num Custodians": safe_int(row["9F"]),
+        "Signatory": safe_str(row["Signatory"]),
+        "Signatory Title": safe_str(row["Title"]),
+        "Discretionary AUM": safe_float(row["5F2a"]),
+        "Non Discretionary AUM": safe_float(row["5F2b"])
     }
 
     if row["1A"] in record_map:
@@ -102,7 +141,7 @@ for _, row in vc_firms.iterrows():
         if response.status_code == 200:
             success += 1
         else:
-            print(f"Error updating {row['1A']}: {response.text[:50]}")
+            print(f"Error updating {row['1A']}: {response.text[:200]}")
     else:
         response = requests.post(
             f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}",
