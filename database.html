@@ -400,9 +400,17 @@
   const PER_PAGE = 25;
 
   async function fetchAllFirms() {
-    const res = await fetch("/.netlify/functions/airtable");
-    const firms = await res.json();
-    return firms;
+    let allFirms = [];
+    let offset = null;
+    do {
+      let url = "/.netlify/functions/airtable?limit=100";
+      if (offset) url += `&offset=${offset}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      allFirms = allFirms.concat(data.records);
+      offset = data.offset;
+    } while (offset);
+    return allFirms;
   }
 
   function formatAUM(aum) {
