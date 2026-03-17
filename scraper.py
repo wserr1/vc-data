@@ -20,7 +20,9 @@ df["DateSubmitted"] = pd.to_datetime(df["DateSubmitted"])
 latest = df.sort_values("DateSubmitted").groupby("1A").last().reset_index()
 
 vc_include = ["VENTURE", "VENTURES"]
-vc_exclude = ["REAL ESTATE", "ENERGY", "INFRASTRUCTURE", "CREDIT", "DEBT", "LENDING", "MORTGAGE", "INSURANCE", "WEALTH", "ADVISORY", "FINANCIAL SERVICES"]
+vc_exclude = ["REAL ESTATE", "ENERGY", "INFRASTRUCTURE", "CREDIT", "DEBT",
+              "LENDING", "MORTGAGE", "INSURANCE", "WEALTH", "ADVISORY",
+              "FINANCIAL SERVICES"]
 
 include_pattern = "|".join(vc_include)
 exclude_pattern = "|".join(vc_exclude)
@@ -39,27 +41,9 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Get ALL existing firms from Airtable (handles pagination)
+# Get ALL existing firms from Airtable
 print("Checking existing records...")
 existing_firms = set()
-offset = None
-while True:
-    url = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}"
-    if offset:
-        url += f"?offset={offset}"
-    resp = requests.get(url, headers=headers)
-    data = resp.json()
-    for record in data.get("records", []):
-        existing_firms.add(record["fields"].get("Firm", ""))
-    offset = data.get("offset")
-    if not offset:
-        break
-
-print(f"Found {len(existing_firms)} existing firms")
-print(f"Pushing {len(vc_firms)} firms to Airtable...")
-
-# Get record IDs so we can update existing records
-print("Getting record IDs...")
 record_map = {}
 offset = None
 while True:
@@ -70,31 +54,35 @@ while True:
     data = resp.json()
     for record in data.get("records", []):
         name = record["fields"].get("Firm", "")
+        existing_firms.add(name)
         record_map[name] = record["id"]
     offset = data.get("offset")
     if not offset:
         break
 
-print(f"Found {len(record_map)} existing records")
+print(f"Found {len(existing_firms)} existing firms")
+
+def safe_str(val):
+    return str(val) if pd.notna(val) else ""
+
+def safe_int(val):
+    try:
+        return int(float(val)) if pd.notna(val) else 0
+    except:
+        return 0
+
+def safe_float(val):
+    try:
+        return float(val) if pd.notna(val) else 0.0
+    except:
+        return 0.0
+
+print(f"Pushing {len(vc_firms)} firms to Airtable...")
+print("Getting record IDs...")
 
 success = 0
 added = 0
 for _, row in vc_firms.iterrows():
-    def safe_str(val):
-        return str(val) if pd.notna(val) else ""
-
-    def safe_int(val):
-        try:
-            return int(float(val)) if pd.notna(val) else 0
-        except:
-            return 0
-
-    def safe_float(val):
-        try:
-            return float(val) if pd.notna(val) else 0.0
-        except:
-            return 0.0
-
     comp_types = []
     if row.get("5E1") == "Y": comp_types.append("% of AUM")
     if row.get("5E2") == "Y": comp_types.append("Hourly")
@@ -150,45 +138,61 @@ for _, row in vc_firms.iterrows():
         )
         if response.status_code == 200:
             added += 1
-            print(f"Added: {row['1A']}")
         else:
-            print(f"Error adding {row['1A']}: {response.text[:50]}")
+            print(f"Error adding {row['1A']}: {response.text[:200]}")
 
 print(f"\nDone! Updated {success} firms, added {added} new firms.")
 
-# Add famous exempt reporting firms
-exempt_firms = [
-    {"Firm": "KLEINER PERKINS", "City": "MENLO PARK", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "GREYLOCK PARTNERS", "City": "MENLO PARK", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "BENCHMARK CAPITAL", "City": "SAN FRANCISCO", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "ACCEL PARTNERS", "City": "PALO ALTO", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "FOUNDERS FUND", "City": "SAN FRANCISCO", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "LIGHTSPEED VENTURE PARTNERS", "City": "MENLO PARK", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "UNION SQUARE VENTURES", "City": "NEW YORK", "State": "NY", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "FIRST ROUND CAPITAL", "City": "SAN FRANCISCO", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-    {"Firm": "ANDREESSEN HOROWITZ", "City": "MENLO PARK", "State": "CA", "Notes": "Exempt Reporting Adviser"},
-]
+# ============================================
+# PART 2: Add ERA exempt reporting VC firms
+# ============================================
+print("\nLoading ERA data...")
 
-print("\nAdding exempt reporting firms...")
-for firm in exempt_firms:
-    if firm["Firm"] in existing_firms:
-        print(f"Skipped (already exists): {firm['Firm']}")
+era = pd.read_csv("ERA_ADV_Base_20111105_20241231.csv", encoding="latin1", low_memory=False)
+era["DateSubmitted"] = pd.to_datetime(era["DateSubmitted"])
+era_latest = era.sort_values("DateSubmitted").groupby("1A").last().reset_index()
+
+era_us = era_latest[
+    era_latest["1F1-Country"] == "United States"
+].copy()
+
+print(f"Total US ERA firms: {len(era_us)}")
+print("Adding to Airtable...")
+
+era_added = 0
+era_skipped = 0
+
+for _, row in era_us.iterrows():
+    if row["1A"] in existing_firms:
+        era_skipped += 1
         continue
-    data = {
-        "fields": {
-            "Firm": firm["Firm"],
-            "City": firm["City"],
-            "State": firm["State"],
-            "Notes": firm["Notes"]
-        }
+
+    fields = {
+        "Firm": row["1A"],
+        "City": safe_str(row["1F1-City"]),
+        "State": safe_str(row["1F1-State"]),
+        "Address": f"{safe_str(row['1F1-Street 1'])} {safe_str(row['1F1-Street 2'])}".strip(),
+        "Phone": safe_str(row["1F3"]),
+        "Fax": safe_str(row["1F4"]),
+        "Business Hours": f"{safe_str(row['1F2-M-F'])} {safe_str(row['1F2-Hours'])}".strip(),
+        "CRD": safe_str(row["1E1"]),
+        "Last Filed": row["DateSubmitted"].strftime("%B %Y"),
+        "Notes": "Exempt Reporting Adviser",
+        "Signatory": safe_str(row["Signatory"]),
+        "Signatory Title": safe_str(row["Title"])
     }
+
     response = requests.post(
         f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}",
         headers=headers,
-        json=data
+        json={"fields": fields}
     )
+
     if response.status_code == 200:
-        print(f"Added: {firm['Firm']}")
+        era_added += 1
+        if era_added % 50 == 0:
+            print(f"Added {era_added} ERA firms so far...")
     else:
-        print(f"Error: {firm['Firm']} — {response.text[:50]}")
-    
+        pass
+
+print(f"\nERA Done! Added {era_added} new firms, skipped {era_skipped} existing.")

@@ -3,21 +3,23 @@ exports.handler = async function(event, context) {
   const BASE_ID = "appyfDILW0PkDwiHH";
   const TABLE_NAME = "VC Firms";
 
-  let allFirms = [];
-  let offset = null;
+  const params = event.queryStringParameters || {};
+  const limit = parseInt(params.limit) || 100;
+  const offset = params.offset || null;
+  const search = params.search || null;
 
-  do {
-    let url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
-    if (offset) url += `?offset=${offset}`;
+  let url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?pageSize=${limit}`;
 
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
-    });
+  if (offset) url += `&offset=${offset}`;
+  if (search) url += `&filterByFormula=SEARCH("${search.toUpperCase()}",UPPER({Firm}))`;
 
-    const data = await res.json();
-    allFirms = allFirms.concat(data.records.map(r => r.fields));
-    offset = data.offset;
-  } while (offset);
+  url += `&sort[0][field]=AUM&sort[0][direction]=desc`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
+  });
+
+  const data = await res.json();
 
   return {
     statusCode: 200,
@@ -25,6 +27,9 @@ exports.handler = async function(event, context) {
       "Access-Control-Allow-Origin": "*",
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(allFirms)
+    body: JSON.stringify({
+      records: data.records.map(r => r.fields),
+      offset: data.offset || null
+    })
   };
 };
