@@ -196,3 +196,29 @@ for _, row in era_us.iterrows():
         pass
 
 print(f"\nERA Done! Added {era_added} new firms, skipped {era_skipped} existing.")
+
+print("\nLoading website data...")
+
+ia_sites = pd.read_csv("IA_Schedule_D_1I_20111105_20241231.csv", encoding="latin1", low_memory=False)
+
+ia_with_names = latest.merge(ia_sites, on="FilingID", how="inner")
+ia_with_names = ia_with_names.sort_values("Website")
+firm_websites = ia_with_names.groupby("1A")["Website"].first().reset_index()
+firm_websites.columns = ["Firm", "Website"]
+firm_websites = firm_websites[firm_websites["Firm"].isin(record_map.keys())]
+print(f"Filtered to {len(firm_websites)} firms in our database")
+
+print(f"Firms with websites: {len(firm_websites)}")
+
+website_added = 0
+for _, row in firm_websites.iterrows():
+    if row["Firm"] in record_map:
+        response = requests.patch(
+            f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}/{record_map[row['Firm']]}",
+            headers=headers,
+            json={"fields": {"Website": row["Website"]}}
+        )
+        if response.status_code == 200:
+            website_added += 1
+
+print(f"Updated {website_added} firms with website data.")
