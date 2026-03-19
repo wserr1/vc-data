@@ -29,6 +29,7 @@ export default async function handler(req, res) {
   const data = await airtableRes.json();
 
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate");
   res.json({
     records: data.records.map(r => r.fields),
     offset: data.offset || null

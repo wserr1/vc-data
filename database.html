@@ -511,6 +511,7 @@
   let currentOffset = null;
 
   async function loadFirms() {
+    document.getElementById("tableBody").innerHTML = '<div class="loading">Loading firms</div>';
     const search = document.getElementById("searchInput").value;
     const state = document.getElementById("stateFilter").value;
     const sort = document.getElementById("sortSelect").value;
