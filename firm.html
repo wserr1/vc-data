@@ -444,7 +444,7 @@
           <div class="data-row"><span class="data-label">Phone</span><span class="data-value">${fmtPhone(firm.Phone)}</span></div>
           ${firm.Fax ? `<div class="data-row"><span class="data-label">Fax</span><span class="data-value">${firm.Fax}</span></div>` : ""}
           ${firm["Business Hours"] ? `<div class="data-row"><span class="data-label">Business Hours</span><span class="data-value">${firm["Business Hours"]}</span></div>` : ""}
-          ${firm.Website ? `<div class="data-row"><span class="data-label">Website</span><span class="data-value"><a href="${firm.Website.startsWith('http') ? firm.Website : 'https://' + firm.Website}" target="_blank" style="color:var(--accent)">${firm.Website}</a></span></div>` : ""}
+          ${firm.Website ? `<div class="data-row"><span class="data-label">Website</span><span class="data-value"><a href="${firm.Website.toLowerCase().startsWith('http') ? firm.Website : 'https://' + firm.Website}" target="_blank" style="color:var(--accent)">${firm.Website}</a></span></div>` : ""}
         </div>
       </div>
 
