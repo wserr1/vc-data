@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VC Data — Find Your Match</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #222222;
+    --border2: #2a2a2a;
+    --text: #f0ede8;
+    --muted: #666660;
+    --accent: #c8f542;
+    --accent2: #e8ff80;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,245,66,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,245,66,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.active { color: var(--accent); }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 120px 48px 80px;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 48px;
+    border: 1px solid var(--border);
+  }
+
+  .step {
+    flex: 1;
+    padding: 16px 24px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+
+  .step:last-child { border-right: none; }
+
+  .step.active { color: var(--accent); background: rgba(200,245,66,0.05); }
+  .step.done { color: var(--muted); }
+
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border: 1px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .step.active .step-num { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+  .step.done .step-num { background: var(--border2); }
+
+  /* FORM PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+  }
+
+  .panel-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  .form-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-input, .form-select {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 14px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    appearance: none;
+  }
+
+  .form-input::placeholder { color: var(--muted); }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+
+  .form-select option { background: var(--surface); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0a;
+    padding: 14px 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    padding: 14px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid var(--border2);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-row { display: flex; gap: 12px; align-items: center; }
+
+  /* LOADING */
+  .loading-screen {
+    text-align: center;
+    padding: 80px 0;
+  }
+
+  .loading-screen h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  .loading-screen p { font-size: 12px; color: var(--muted); margin-bottom: 32px; }
+
+  .loading-bar-outer {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    margin: 0 auto;
+    max-width: 400px;
+  }
+
+  .loading-bar-inner {
+    height: 2px;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .loading-steps {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 400px;
+    margin: 24px auto 0;
+  }
+
+  .loading-step {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .loading-step.visible { opacity: 1; }
+  .loading-step.done { color: var(--accent); }
+
+  .loading-step::before {
+    content: '○';
+    font-size: 10px;
+  }
+
+  .loading-step.done::before { content: '●'; }
+
+  /* RESULTS */
+  .results-header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .results-tag {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .results-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+  }
+
+  .results-sub { font-size: 12px; color: var(--muted); }
+
+  .match-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .match-card:hover { border-color: var(--border2); }
+
+  .match-card-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 20px 24px;
+    cursor: pointer;
+    gap: 16px;
+  }
+
+  .match-rank {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .match-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .match-location { font-size: 11px; color: var(--muted); }
+
+  .match-right { text-align: right; }
+
+  .match-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .match-pct.high { color: var(--accent); }
+  .match-pct.mid { color: #e8c542; }
+  .match-pct.low { color: var(--muted); }
+
+  .match-bar-outer {
+    width: 120px;
+    height: 2px;
+    background: var(--border);
+    margin-left: auto;
+  }
+
+  .match-bar-inner { height: 2px; background: var(--accent); }
+
+  .match-expand {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .match-details {
+    display: none;
+    padding: 0 24px 20px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .match-details.open { display: block; }
+
+  .match-reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .reason {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .reason-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .reason.good { color: var(--text); }
+  .reason.good .reason-icon { color: var(--accent); }
+  .reason.caution { color: var(--muted); }
+  .reason.caution .reason-icon { color: #e8c542; }
+  .reason.bad { color: var(--muted); }
+  .reason.bad .reason-icon { color: #ff6b6b; }
+
+  .match-data-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .match-data-item { font-size: 11px; }
+  .match-data-label { color: var(--muted); margin-bottom: 2px; }
+  .match-data-value { color: var(--text); }
+  .match-data-value.accent { color: var(--accent); }
+
+  .view-profile {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(200,245,66,0.3);
+    padding-bottom: 2px;
+    transition: border-color 0.2s;
+  }
+
+  .view-profile:hover { border-color: var(--accent); }
+
+  .restart-btn {
+    margin-top: 32px;
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .restart-btn:hover { color: var(--text); }
+
+  .no-results {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">VC<span>.</span>Data</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="database.html">Database</a></li>
+    <li><a href="match.html" class="active">Match</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+</nav>
+
+<div class="main">
+
+  <!-- Progress steps -->
+  <div class="steps" id="stepsBar">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      Your Startup
+    </div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      Funding Details
+    </div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      Results
+    </div>
+  </div>
+
+  <!-- Panel 1: Startup Info -->
+  <div class="panel active" id="panel1">
+    <h1 class="panel-title">Tell us about your startup</h1>
+    <p class="panel-sub">We'll use this to find VC firms that are the best fit for your company.</p>
+
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Company Name</label>
+        <input class="form-input" type="text" id="companyName" placeholder="e.g. Acme Inc.">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Industry</label>
+        <select class="form-select" id="industry">
+          <option value="">Select industry</option>
+          <option>AI / Machine Learning</option>
+          <option>SaaS / Software</option>
+          <option>Fintech</option>
+          <option>Healthcare / Biotech</option>
+          <option>Consumer</option>
+          <option>Deep Tech / Hardware</option>
+          <option>Food & Beverage</option>
+          <option>E-commerce</option>
+          <option>Climate / Clean Tech</option>
+          <option>Real Estate / PropTech</option>
+          <option>Cybersecurity</option>
+          <option>EdTech</option>
+          <option>Gaming</option>
+          <option>Logistics / Supply Chain</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stage</label>
+        <select class="form-select" id="stage">
+          <option value="">Select stage</option>
+          <option>Pre-seed</option>
+          <option>Seed</option>
+          <option>Series A</option>
+          <option>Series B</option>
+          <option>Series C+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Team Size</label>
+        <select class="form-select" id="teamSize">
+          <option value="">Select team size</option>
+          <option>1-5</option>
+          <option>6-15</option>
+          <option>16-50</option>
+          <option>51-200</option>
+          <option>200+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location (State)</label>
+        <select class="form-select" id="location">
+          <option value="">Any location</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+          <option>CA</option><option>CO</option><option>CT</option><option>DC</option>
+          <option>DE</option><option>FL</option><option>GA</option><option>HI</option>
+          <option>ID</option><option>IL</option><option>IN</option><option>IA</option>
+          <option>KS</option><option>KY</option><option>LA</option><option>ME</option>
+          <option>MD</option><option>MA</option><option>MI</option><option>MN</option>
+          <option>MS</option><option>MO</option><option>MT</option><option>NE</option>
+          <option>NV</option><option>NH</option><option>NJ</option><option>NM</option>
+          <option>NY</option><option>NC</option><option>ND</option><option>OH</option>
+          <option>OK</option><option>OR</option><option>PA</option><option>RI</option>
+          <option>SC</option><option>SD</option><option>TN</option><option>TX</option>
+          <option>UT</option><option>VT</option><option>VA</option><option>WA</option>
+          <option>WV</option><option>WI</option><option>WY</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="goToStep2()">Next →</button>
+    </div>
+  </div>
+
+  <!-- Panel 2: Funding Details -->
+  <div class="panel" id="panel2">
+    <h1 class="panel-title">Funding details</h1>
+    <p class="panel-sub">Help us understand what you're looking for so we can match you with the right firms.</p>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Raise Amount</label>
+        <select class="form-select" id="raiseAmount">
+          <option value="">Select raise amount</option>
+          <option value="under1m">Under $1M</option>
+          <option value="1m-3m">$1M – $3M</option>
+          <option value="3m-10m">$3M – $10M</option>
+          <option value="10m-25m">$10M – $25M</option>
+          <option value="25m-50m">$25M – $50M</option>
+          <option value="50m+">$50M+</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Annual Revenue</label>
+        <select class="form-select" id="revenue">
+          <option value="">Select revenue</option>
+          <option value="pre-revenue">Pre-revenue</option>
+          <option value="under500k">Under $500K</option>
+          <option value="500k-2m">$500K – $2M</option>
+          <option value="2m-10m">$2M – $10M</option>
+          <option value="10m+">$10M+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="goToStep1()">← Back</button>
+      <button class="btn-primary" onclick="runMatch()">Find My Match →</button>
+    </div>
+  </div>
+
+  <!-- Panel 3: Loading -->
+  <div class="panel" id="panel3">
+    <div class="loading-screen">
+      <h2>Finding your matches</h2>
+      <p>Analyzing <span id="firmCount">7,000+</span> VC firms against your profile</p>
+      <div class="loading-bar-outer">
+        <div class="loading-bar-inner" id="loadingBar"></div>
+      </div>
+      <div class="loading-steps">
+        <div class="loading-step" id="ls1">Fetching firm database</div>
+        <div class="loading-step" id="ls2">Filtering by raise amount and stage</div>
+        <div class="loading-step" id="ls3">Scoring firm compatibility</div>
+        <div class="loading-step" id="ls4">Ranking top matches</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 4: Results -->
+  <div class="panel" id="panel4">
+    <div class="results-header">
+      <div class="results-tag">Match Results</div>
+      <h2 class="results-title" id="resultsTitle">Your top matches</h2>
+      <p class="results-sub" id="resultsSub">Based on your profile, here are the VC firms most aligned with your startup.</p>
+    </div>
+    <div id="resultsContainer"></div>
+    <button class="restart-btn" onclick="restart()">← Start Over</button>
+  </div>
+
+</div>
+
+<script>
+  let startupData = {};
+
+  function goToStep1() {
+    setPanel("panel1");
+    setStep(1);
+  }
+
+  function goToStep2() {
+    const industry = document.getElementById("industry").value;
+    const stage = document.getElementById("stage").value;
+    if (!industry || !stage) {
+      alert("Please select an industry and stage.");
+      return;
+    }
+    startupData.companyName = document.getElementById("companyName").value || "Your startup";
+    startupData.industry = industry;
+    startupData.stage = stage;
+    startupData.teamSize = document.getElementById("teamSize").value;
+    startupData.location = document.getElementById("location").value;
+    setPanel("panel2");
+    setStep(2);
+  }
+
+  async function runMatch() {
+    const raiseAmount = document.getElementById("raiseAmount").value;
+    const revenue = document.getElementById("revenue").value;
+    if (!raiseAmount) { alert("Please select a raise amount."); return; }
+    startupData.raiseAmount = raiseAmount;
+    startupData.revenue = revenue;
+
+    setPanel("panel3");
+    setStep(3);
+    animateLoading();
+
+    const firms = await fetchFirms();
+    const matches = scoreFirms(firms, startupData);
+    showResults(matches);
+  }
+
+  async function fetchFirms() {
+    let allFirms = [];
+    let offset = null;
+    do {
+      let url = "/.netlify/functions/airtable?limit=100";
+      if (offset) url += `&offset=${offset}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      allFirms = allFirms.concat(data.records);
+      offset = data.offset;
+    } while (offset);
+    return allFirms;
+  }
+
+  function getAUMRange(raiseAmount) {
+    const ranges = {
+      "under1m": [0, 500_000_000],
+      "1m-3m": [50_000_000, 2_000_000_000],
+      "3m-10m": [200_000_000, 5_000_000_000],
+      "10m-25m": [500_000_000, 15_000_000_000],
+      "25m-50m": [1_000_000_000, 40_000_000_000],
+      "50m+": [2_000_000_000, Infinity]
+    };
+    return ranges[raiseAmount] || [0, Infinity];
+  }
+
+  function getStageAUMBoost(stage, aum) {
+    if (!aum) return 0;
+    if (stage === "Pre-seed" && aum < 500_000_000) return 15;
+    if (stage === "Seed" && aum < 2_000_000_000) return 15;
+    if (stage === "Series A" && aum >= 500_000_000 && aum < 10_000_000_000) return 15;
+    if (stage === "Series B" && aum >= 2_000_000_000 && aum < 30_000_000_000) return 15;
+    if (stage === "Series C+" && aum >= 5_000_000_000) return 15;
+    return 0;
+  }
+
+  function scoreFirms(firms, data) {
+    const [minAUM, maxAUM] = getAUMRange(data.raiseAmount);
+    const scored = [];
+
+    for (const firm of firms) {
+      if (!firm.Firm) continue;
+
+      let score = 50;
+      const reasons = [];
+      const cautions = [];
+
+      const aum = firm.AUM || 0;
+      const isExempt = firm.Notes === "Exempt Reporting Adviser";
+
+      // AUM / raise amount compatibility
+      if (aum > 0) {
+        if (aum >= minAUM && aum <= maxAUM) {
+          score += 20;
+          reasons.push({ type: "good", text: `AUM of ${formatAUM(aum)} is well aligned with your raise target` });
+        } else if (aum < minAUM) {
+          score -= 15;
+          cautions.push({ type: "caution", text: `Firm may be too small for your raise amount` });
+        } else if (aum > maxAUM * 3) {
+          score -= 10;
+          cautions.push({ type: "caution", text: `Very large firm — may focus on larger deals than yours` });
+        }
+      }
+
+      // Stage boost
+      const stageBoost = getStageAUMBoost(data.stage, aum);
+      if (stageBoost > 0) {
+        score += stageBoost;
+        reasons.push({ type: "good", text: `Firm size is consistent with ${data.stage} investments` });
+      }
+
+      // Location match
+      if (data.location && firm.State === data.location) {
+        score += 12;
+        reasons.push({ type: "good", text: `Based in ${firm.City}, ${firm.State} — same state as your startup` });
+      } else if (firm.State === "CA" || firm.State === "NY" || firm.State === "MA") {
+        score += 5;
+        reasons.push({ type: "good", text: `Located in ${firm.City}, ${firm.State} — major VC hub` });
+      }
+
+      // Private fund adviser
+      if (firm["Private Fund Advisor"] === "Yes" || isExempt) {
+        score += 8;
+        reasons.push({ type: "good", text: "Registered as a private fund adviser — structured for VC investments" });
+      }
+
+      // Exempt reporting (pure VC)
+      if (isExempt) {
+        score += 5;
+        reasons.push({ type: "good", text: "Exempt Reporting Adviser — typically a pure-play VC firm" });
+      }
+
+      // Team size vs firm employees
+      if (firm.Employees > 0) {
+        if (data.teamSize === "1-5" && firm.Employees < 20) {
+          score += 5;
+          reasons.push({ type: "good", text: "Smaller firm likely to give hands-on attention to early-stage companies" });
+        } else if (data.teamSize === "200+" && firm.Employees > 50) {
+          score += 5;
+          reasons.push({ type: "good", text: "Large firm with resources to support scaling companies" });
+        }
+      }
+
+      // Cautions
+      if (!firm.Phone && !isExempt) {
+        cautions.push({ type: "caution", text: "Limited contact information available" });
+      }
+
+      if (aum === 0 && !isExempt) {
+        cautions.push({ type: "caution", text: "No AUM data available — may be inactive or very small" });
+        score -= 10;
+      }
+
+      const allReasons = [...reasons, ...cautions];
+      if (allReasons.length === 0) {
+        allReasons.push({ type: "good", text: "Registered investment adviser active in the US market" });
+      }
+
+      score = Math.max(10, Math.min(99, score));
+
+      scored.push({ firm, score, reasons: allReasons });
+    }
+
+    return scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+  }
+
+  function formatAUM(n) {
+    if (!n) return "—";
+    if (n >= 1e9) return `$${(n/1e9).toFixed(1)}B`;
+    if (n >= 1e6) return `$${(n/1e6).toFixed(0)}M`;
+    return `$${n.toLocaleString()}`;
+  }
+
+  function showResults(matches) {
+    setPanel("panel4");
+
+    document.getElementById("resultsTitle").textContent = `Top matches for ${startupData.companyName}`;
+    document.getElementById("resultsSub").textContent =
+      `Based on your ${startupData.stage} ${startupData.industry} startup raising ${startupData.raiseAmount.replace(/-/g," ").replace("m","M").replace("under","under $").replace("+","+")}`;
+
+    const container = document.getElementById("resultsContainer");
+
+    if (matches.length === 0) {
+      container.innerHTML = '<div class="no-results">No matches found. Try adjusting your criteria.</div>';
+      return;
+    }
+
+    container.innerHTML = matches.map((m, i) => {
+      const f = m.firm;
+      const pctClass = m.score >= 75 ? "high" : m.score >= 55 ? "mid" : "low";
+      const firmUrl = `firm.html?firm=${encodeURIComponent(f.Firm)}`;
+
+      const reasonsHTML = m.reasons.slice(0, 4).map(r => `
+        <div class="reason ${r.type}">
+          <span class="reason-icon">${r.type === "good" ? "✓" : r.type === "caution" ? "!" : "✗"}</span>
+          <span>${r.text}</span>
+        </div>
+      `).join("");
+
+      return `
+        <div class="match-card">
+          <div class="match-card-header" onclick="toggleDetails(${i})">
+            <div>
+              <div class="match-rank">#${i+1} Match</div>
+              <div class="match-name">${f.Firm}</div>
+              <div class="match-location">${f.City || "—"}, ${f.State || "—"}</div>
+            </div>
+            <div class="match-right">
+              <div class="match-pct ${pctClass}">${m.score}%</div>
+              <div class="match-bar-outer">
+                <div class="match-bar-inner" style="width:${m.score}%"></div>
+              </div>
+              <div class="match-expand" id="expandLabel${i}">▼ See reasons</div>
+            </div>
+          </div>
+          <div class="match-details" id="details${i}">
+            <div class="match-reasons">${reasonsHTML}</div>
+            <div class="match-data-row">
+              <div class="match-data-item">
+                <div class="match-data-label">AUM</div>
+                <div class="match-data-value accent">${formatAUM(f.AUM)}</div>
+              </div>
+              <div class="match-data-item">
+                <div class="match-data-label">Location</div>
+                <div class="match-data-value">${f.City || "—"}, ${f.State || "—"}</div>
+              </div>
+              <div class="match-data-item">
+                <div class="match-data-label">Employees</div>
+                <div class="match-data-value">${f.Employees || "—"}</div>
+              </div>
+              <div class="match-data-item">
+                <div class="match-data-label">Type</div>
+                <div class="match-data-value">${f.Notes === "Exempt Reporting Adviser" ? "Exempt RA" : "Full Registrant"}</div>
+              </div>
+            </div>
+            <a href="${firmUrl}" class="view-profile">View Full Profile →</a>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function toggleDetails(i) {
+    const details = document.getElementById(`details${i}`);
+    const label = document.getElementById(`expandLabel${i}`);
+    const isOpen = details.classList.contains("open");
+    details.classList.toggle("open", !isOpen);
+    label.textContent = isOpen ? "▼ See reasons" : "▲ Hide reasons";
+  }
+
+  function animateLoading() {
+    const bar = document.getElementById("loadingBar");
+    const steps = ["ls1","ls2","ls3","ls4"];
+    let progress = 0;
+
+    const interval = setInterval(() => {
+      progress += 2;
+      bar.style.width = progress + "%";
+      if (progress >= 100) clearInterval(interval);
+    }, 60);
+
+    steps.forEach((id, i) => {
+      setTimeout(() => {
+        document.getElementById(id).classList.add("visible");
+        setTimeout(() => {
+          document.getElementById(id).classList.add("done");
+        }, 800);
+      }, i * 800);
+    });
+  }
+
+  function setPanel(id) {
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  function setStep(n) {
+    document.querySelectorAll(".step").forEach((s, i) => {
+      s.classList.remove("active", "done");
+      if (i + 1 < n) s.classList.add("done");
+      if (i + 1 === n) s.classList.add("active");
+    });
+    if (n > 3) document.getElementById("stepsBar").style.display = "none";
+  }
+
+  function restart() {
+    startupData = {};
+    document.getElementById("companyName").value = "";
+    document.getElementById("industry").value = "";
+    document.getElementById("stage").value = "";
+    document.getElementById("teamSize").value = "";
+    document.getElementById("location").value = "";
+    document.getElementById("raiseAmount").value = "";
+    document.getElementById("revenue").value = "";
+    document.getElementById("loadingBar").style.width = "0%";
+    document.querySelectorAll(".loading-step").forEach(s => s.classList.remove("visible","done"));
+    document.getElementById("stepsBar").style.display = "flex";
+    setPanel("panel1");
+    setStep(1);
+  }
+</script>
+</body>
+</html>
