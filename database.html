@@ -400,7 +400,7 @@
   const PER_PAGE = 25;
 
   async function fetchFirms(search, state, sort, offset) {
-    let url = "/.netlify/functions/airtable?limit=25";
+    let url = "/api/airtable?limit=25";
     if (search) url += `&search=${encodeURIComponent(search)}`;
     if (state) url += `&state=${encodeURIComponent(state)}`;
     if (sort) url += `&sort=${sort}`;

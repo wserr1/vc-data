@@ -363,7 +363,7 @@
       return;
     }
 
-    const res = await fetch(`/.netlify/functions/airtable?search=${encodeURIComponent(firmName)}&limit=1`);
+    const res = await fetch(`/api/airtable?search=${encodeURIComponent(firmName)}&limit=1`);
     const data = await res.json();
     const firm = data.records[0];
 
