@@ -222,3 +222,125 @@ for _, row in firm_websites.iterrows():
             website_added += 1
 
 print(f"Updated {website_added} firms with website data.")
+
+# ============================================
+# PART 4: Push ERA website data to Airtable
+# ============================================
+print("\nLoading ERA website data...")
+
+era_sites = pd.read_csv("ERA_Schedule_D_7B1A28_websites_20111105_20241231.csv", encoding="latin1", low_memory=False)
+
+era_with_names = era_latest.merge(era_sites, on="FilingID", how="inner")
+era_with_names = era_with_names.sort_values("Website Address")
+era_firm_websites = era_with_names.groupby("1A")["Website Address"].first().reset_index()
+era_firm_websites.columns = ["Firm", "Website"]
+
+era_firm_websites = era_firm_websites[era_firm_websites["Firm"].isin(record_map.keys())]
+print(f"ERA firms with websites: {len(era_firm_websites)}")
+
+era_web_added = 0
+for _, row in era_firm_websites.iterrows():
+    if row["Firm"] in record_map:
+        response = requests.patch(
+            f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}/{record_map[row['Firm']]}",
+            headers=headers,
+            json={"fields": {"Website": row["Website"]}}
+        )
+        if response.status_code == 200:
+            era_web_added += 1
+            if era_web_added % 100 == 0:
+                print(f"Updated {era_web_added} ERA firms so far...")
+
+print(f"Updated {era_web_added} ERA firms with website data.")
+
+# ============================================
+# PART 5: Scrape firm websites for industry/stage data
+# ============================================
+from bs4 import BeautifulSoup
+import time
+
+print("\nScraping firm websites for industry/stage data...")
+
+def scrape_firm_website(url):
+    try:
+        if not url.lower().startswith("http"):
+            url = "https://" + url
+        response = requests.get(url, timeout=10, headers={
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+        })
+        soup = BeautifulSoup(response.text, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer"]):
+            tag.decompose()
+        text = soup.get_text(separator=" ").lower()
+        text = " ".join(text.split())
+
+        industry_keywords = {
+            "AI / Machine Learning": ["artificial intelligence", "machine learning", "deep learning", "ai ", " ai,"],
+            "SaaS / Software": ["saas", "software", "cloud", "enterprise software"],
+            "Fintech": ["fintech", "financial technology", "payments", "banking"],
+            "Healthcare / Biotech": ["healthcare", "biotech", "life sciences", "medical", "health"],
+            "Consumer": ["consumer", "retail", "e-commerce", "marketplace"],
+            "Deep Tech / Hardware": ["deep tech", "hardware", "semiconductor", "robotics"],
+            "Climate / Clean Tech": ["climate", "clean tech", "cleantech", "energy", "sustainability"],
+            "Cybersecurity": ["cybersecurity", "security", "cyber"],
+            "EdTech": ["edtech", "education", "learning"],
+            "Gaming": ["gaming", "games", "esports"],
+        }
+
+        stage_keywords = {
+            "Pre-seed": ["pre-seed", "pre seed", "idea stage"],
+            "Seed": ["seed stage", "seed investment", "seed fund", "early stage"],
+            "Series A": ["series a", "series-a"],
+            "Series B": ["series b", "series-b", "growth stage"],
+            "Series C+": ["series c", "late stage", "growth equity"],
+        }
+
+        industries = [i for i, kws in industry_keywords.items() if any(kw in text for kw in kws)]
+        stages = [s for s, kws in stage_keywords.items() if any(kw in text for kw in kws)]
+
+        return {
+            "Industry Focus": ", ".join(industries[:5]) if industries else "",
+            "Stage Focus": ", ".join(stages) if stages else ""
+        }
+    except:
+        return None
+
+# Get all firms with websites from Airtable
+all_records = []
+offset = None
+while True:
+    url = f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}"
+    if offset:
+        url += f"?offset={offset}"
+    resp = requests.get(url, headers=headers)
+    data = resp.json()
+    for record in data.get("records", []):
+        if record["fields"].get("Website"):
+            all_records.append(record)
+    offset = data.get("offset")
+    if not offset:
+        break
+
+print(f"Found {len(all_records)} firms with websites to scrape")
+
+scraped = 0
+failed = 0
+for record in all_records:
+    if record["fields"].get("Industry Focus"):
+        continue
+    website = record["fields"]["Website"]
+    result = scrape_firm_website(website)
+    if result and (result["Industry Focus"] or result["Stage Focus"]):
+        requests.patch(
+            f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}/{record['id']}",
+            headers=headers,
+            json={"fields": result}
+        )
+        scraped += 1
+    else:
+        failed += 1
+    if (scraped + failed) % 50 == 0:
+        print(f"Progress: {scraped + failed}/{len(all_records)} — {scraped} successful")
+    time.sleep(0.5)
+
+print(f"\nDone! Scraped {scraped} firms successfully, {failed} failed or empty.")

@@ -765,6 +765,29 @@
       // Private fund adviser
       if (firm["Private Fund Advisor"] === "Yes" || isExempt) {
         score += 8;
+        // Industry match
+      if (firm["Industry Focus"] && data.industry) {
+        const firmIndustries = firm["Industry Focus"].toLowerCase();
+        const userIndustry = data.industry.toLowerCase();
+        const industryWords = userIndustry.split(/[\s\/,]+/);
+        const matches = industryWords.filter(w => w.length > 2 && firmIndustries.includes(w));
+        if (matches.length > 0) {
+          score += 25;
+          reasons.push({ type: "good", text: `Invests in ${data.industry} — matches your industry` });
+        } else {
+          score -= 10;
+          cautions.push({ type: "caution", text: `No confirmed focus on ${data.industry}` });
+        }
+      }
+
+      // Stage match
+      if (firm["Stage Focus"] && data.stage) {
+        const firmStages = firm["Stage Focus"].toLowerCase();
+        if (firmStages.includes(data.stage.toLowerCase())) {
+          score += 20;
+          reasons.push({ type: "good", text: `Confirmed ${data.stage} investor` });
+        }
+      }
         reasons.push({ type: "good", text: "Registered as a private fund adviser — structured for VC investments" });
       }
 
