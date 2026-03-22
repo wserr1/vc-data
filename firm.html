@@ -465,6 +465,8 @@
           <div class="data-row"><span class="data-label">Non-US Clients</span><span class="data-value">${pct(firm["Pct Non-US Clients"])}</span></div>
           <div class="data-row"><span class="data-label">Compensation Structure</span><span class="data-value">${v(firm.Compensation)}</span></div>
           <div class="data-row"><span class="data-label">Number of Custodians</span><span class="data-value">${v(firm["Num Custodians"])}</span></div>
+          ${firm["Fund Number"] ? `<div class="data-row"><span class="data-label">Fund Type</span><span class="data-value">${firm["Fund Number"]}</span></div>` : ""}
+${firm["Check Size Min"] ? `<div class="data-row"><span class="data-label">Min Investment</span><span class="data-value accent">$${parseInt(firm["Check Size Min"]).toLocaleString()}</span></div>` : ""}
         </div>
       </div>
 
@@ -476,12 +478,12 @@
           <div class="data-row"><span class="data-label">Investment Staff</span><span class="data-value">${v(firm["Advisory Employees"])}</span></div>
         </div>
         <div class="card">
-          <div class="card-title">Key Contacts</div>
+          <div class="card-title">Key People</div>
+          ${firm["Key Partners"] ? `<div class="data-row"><span class="data-label">Partners</span><span class="data-value">${firm["Key Partners"]}</span></div>` : ""}
           ${firm.Signatory ? `<div class="data-row"><span class="data-label">Signatory</span><span class="data-value">${firm.Signatory}</span></div>` : ""}
           ${firm["Signatory Title"] ? `<div class="data-row"><span class="data-label">Title</span><span class="data-value">${firm["Signatory Title"]}</span></div>` : ""}
-          ${!firm.Signatory && !firm["Signatory Title"] ? `<div class="data-row"><span class="data-label">Contact data</span><span class="data-value">Not available</span></div>` : ""}
+          ${!firm["Key Partners"] && !firm.Signatory ? `<div class="data-row"><span class="data-label">Contact data</span><span class="data-value">Not available</span></div>` : ""}
         </div>
-      </div>
 
       <div class="source-tag">
         All data sourced from <span>SEC Form ADV — IA_ADV_Base_A dataset</span>.
