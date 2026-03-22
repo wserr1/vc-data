@@ -470,6 +470,14 @@ ${firm["Check Size Min"] ? `<div class="data-row"><span class="data-label">Min I
         </div>
       </div>
 
+      ${firm["Geographic Focus"] ? `
+      <div class="section-label">Geographic Reach</div>
+      <div class="grid-2">
+        <div class="card full">
+          <div class="card-title">Office Locations</div>
+          <div class="data-row"><span class="data-label">States / Countries</span><span class="data-value">${firm["Geographic Focus"]}</span></div>
+        </div>
+      </div>` : ""}
       <div class="section-label">People & Operations</div>
       <div class="grid-2">
         <div class="card">

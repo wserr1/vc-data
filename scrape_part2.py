@@ -12,48 +12,43 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-print("Loading fund data...")
+print("Loading office locations data...")
 
-funds = pd.read_csv("ERA_Schedule_D_7B1_20111105_20241231.csv", encoding="latin1", low_memory=False)
+era_offices = pd.read_csv("ERA_Schedule_D_1F_20111105_20241231.csv", encoding="latin1", low_memory=False, on_bad_lines='skip')
+ia_offices = pd.read_csv("IA_Schedule_D_1F_20111105_20241231.csv", encoding="latin1", low_memory=False, on_bad_lines='skip')
 era = pd.read_csv("ERA_ADV_Base_20111105_20241231.csv", encoding="latin1", low_memory=False)
+adv = pd.read_csv("IA_ADV_Base_A_20111105_20241231.csv", encoding="latin1", low_memory=False)
 
 era["DateSubmitted"] = pd.to_datetime(era["DateSubmitted"])
 era_latest = era.sort_values("DateSubmitted").groupby("1A").last().reset_index()
 
-merged = era_latest.merge(funds, on="FilingID", how="inner")
+adv["DateSubmitted"] = pd.to_datetime(adv["DateSubmitted"])
+adv_latest = adv.sort_values("DateSubmitted").groupby("1A").last().reset_index()
 
-# Group fund names per firm
-fund_names = merged.groupby("1A")["Fund Name"].apply(
-    lambda x: ", ".join(x.dropna().unique()[:5])
-).reset_index()
-fund_names.columns = ["Firm", "Fund Names"]
+era_merged = era_latest.merge(era_offices, on="FilingID", how="inner")
+ia_merged = adv_latest.merge(ia_offices, on="FilingID", how="inner")
 
-# Get minimum investment — take the most common non-zero value per firm
-def get_min_investment(series):
-    vals = series.dropna()
-    vals = vals[vals > 0]
-    if len(vals) == 0:
-        return None
-    return int(vals.median())
+def get_locations(df):
+    us = df[df["Country"] == "United States"]
+    states = us.groupby("1A")["State"].apply(
+        lambda x: ", ".join(x.dropna().unique())
+    ).reset_index()
+    states.columns = ["Firm", "Office States"]
+    
+    intl = df[df["Country"] != "United States"]
+    countries = intl.groupby("1A")["Country"].apply(
+        lambda x: ", ".join(x.dropna().unique()[:5])
+    ).reset_index()
+    countries.columns = ["Firm", "Intl Offices"]
+    
+    return states.merge(countries, on="Firm", how="outer")
 
-min_investments = merged.groupby("1A")["Minimum Investment"].apply(get_min_investment).reset_index()
-min_investments.columns = ["Firm", "Min Investment"]
+era_locs = get_locations(era_merged)
+ia_locs = get_locations(ia_merged)
+all_locs = pd.concat([era_locs, ia_locs]).drop_duplicates(subset=["Firm"])
 
-# Get fund types
-fund_types = merged.groupby("1A")["Fund Type"].apply(
-    lambda x: ", ".join(x.dropna().unique()[:3])
-).reset_index()
-fund_types.columns = ["Firm", "Fund Types"]
+print(f"Found location data for {len(all_locs)} firms")
 
-# Merge all
-firm_fund_data = fund_names.merge(min_investments, on="Firm").merge(fund_types, on="Firm")
-
-print(f"Found fund data for {len(firm_fund_data)} firms")
-print("\nSample:")
-for _, row in firm_fund_data.head(5).iterrows():
-    print(f"{row['Firm']}: {row['Fund Names'][:60]} | Min: ${row['Min Investment']:,}" if row['Min Investment'] else f"{row['Firm']}: {row['Fund Names'][:60]}")
-
-# Get Airtable record map
 print("\nGetting Airtable records...")
 record_map = {}
 offset = None
@@ -72,16 +67,22 @@ while True:
 
 print(f"Found {len(record_map)} firms in Airtable")
 
-firm_fund_data = firm_fund_data[firm_fund_data["Firm"].isin(record_map.keys())]
-print(f"Updating {len(firm_fund_data)} firms with fund data...")
+all_locs = all_locs[all_locs["Firm"].isin(record_map.keys())]
+print(f"Updating {len(all_locs)} firms with location data...")
 
+import time
 updated = 0
-for _, row in firm_fund_data.iterrows():
-    fields = {
-        "Fund Number": row["Fund Types"] if pd.notna(row["Fund Types"]) else "",
-    }
-    if pd.notna(row["Min Investment"]) and row["Min Investment"]:
-        fields["Check Size Min"] = float(row["Min Investment"])
+for _, row in all_locs.iterrows():
+    fields = {}
+    if pd.notna(row.get("Office States")) and row["Office States"]:
+        fields["Geographic Focus"] = row["Office States"]
+    if pd.notna(row.get("Intl Offices")) and row["Intl Offices"]:
+        existing = fields.get("Geographic Focus", "")
+        fields["Geographic Focus"] = f"{existing}, {row['Intl Offices']}".strip(", ")
+    
+    if not fields:
+        continue
+    
     try:
         resp = requests.patch(
             f"https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}/{record_map[row['Firm']]}",
@@ -90,11 +91,10 @@ for _, row in firm_fund_data.iterrows():
         )
         if resp.status_code == 200:
             updated += 1
-            if updated % 100 == 0:
+            if updated % 200 == 0:
                 print(f"Updated {updated} firms so far...")
     except:
         pass
-    import time
-    time.sleep(0.1)
+    time.sleep(0.05)
 
-print(f"\nDone! Updated {updated} firms with fund data.")
+print(f"\nDone! Updated {updated} firms with location data.")
