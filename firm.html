@@ -493,6 +493,32 @@ ${firm["Check Size Min"] ? `<div class="data-row"><span class="data-label">Min I
           ${!firm["Key Partners"] && !firm.Signatory ? `<div class="data-row"><span class="data-label">Contact data</span><span class="data-value">Not available</span></div>` : ""}
         </div>
 
+        ${firm.Description || firm.Thesis ? `
+      <div class="section-label">Investment Strategy</div>
+      <div class="grid-2">
+        ${firm.Description ? `<div class="card">
+          <div class="card-title">Primary Business</div>
+          <div style="font-size:12px;line-height:1.7;color:var(--text)">${firm.Description}</div>
+        </div>` : ""}
+        ${firm.Thesis ? `<div class="card">
+          <div class="card-title">Other Activities</div>
+          <div style="font-size:12px;line-height:1.7;color:var(--text)">${firm.Thesis}</div>
+        </div>` : ""}
+      </div>` : ""}
+
+      ${firm.Auditor || firm["Prime Broker"] || firm["LP Base"] ? `
+      <div class="section-label">Service Providers & Backers</div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Service Providers</div>
+          ${firm.Auditor ? `<div class="data-row"><span class="data-label">Auditor</span><span class="data-value">${firm.Auditor}</span></div>` : ""}
+          ${firm["Prime Broker"] ? `<div class="data-row"><span class="data-label">Prime Broker</span><span class="data-value">${firm["Prime Broker"]}</span></div>` : ""}
+        </div>
+        ${firm["LP Base"] ? `<div class="card">
+          <div class="card-title">Parent / Backer</div>
+          <div style="font-size:12px;line-height:1.7;color:var(--text)">${firm["LP Base"]}</div>
+        </div>` : "<div class='card'><div class='card-title'>Parent / Backer</div><div class='data-row'><span class='data-label'>Not available</span></div></div>"}
+      </div>` : ""}
       <div class="source-tag">
         All data sourced from <span>SEC Form ADV — IA_ADV_Base_A dataset</span>.
         Figures reflect the most recent filing as of ${v(firm["Last Filed"])}.
